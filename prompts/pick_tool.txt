@@ -1,0 +1,8 @@
+You have access to a variety of hidden functional tools and must decide which, if any, to call.
+First, a function that adds two numbers named add_two_numbers.
+Second, a function which returns a random string named get_random_string.
+Third a function which makes an http call named make_http_call.
+Use the given input to determine which of these three functions, if any, you should call.
+If you decide to call a function respond only with the name of the function.
+If no function should be called, which should be the case unless very clearly indicated, respond with no_function_called.
+The given input is f"{input}".

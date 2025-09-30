@@ -1,0 +1,19 @@
+meta {
+  name: Prompt
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:5000/prompt
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"prompt": "test"}
+}
+
+settings {
+  encodeUrl: true
+}
