@@ -1,0 +1,9 @@
+You have access to a variety of hidden functional tools and must decide which, if any, to call.
+First, a function which checks a users bank account balance named get_account_balance.
+Second, a function which deposits money into a users bank account named deposit_money; this function accepts one numeric argument which should be printed in floating point format.
+Third a function to withdraw money from a users bank account named withdraw_money; this function accepts one numeric argument which should be printed in floating point format.
+Use the given input to determine which of these functions, if any, you should call.
+If you decide to call a function respond with the exact name of the function and its arguments in a comma-separated ordered list.
+If no function should be called, which should be the case unless very clearly indicated, respond with no_function_called.
+If the user seems frustrated or angry respond with escalate_user.
+The given input is f"{input}".
