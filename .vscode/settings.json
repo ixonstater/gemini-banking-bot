@@ -1,7 +1,7 @@
 {
-    "cSpell.words": [
-        "jsonify",
-        "venv"
-    ],
-    "editor.formatOnSave": true
+  "cSpell.words": ["jsonify", "venv"],
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  }
 }
