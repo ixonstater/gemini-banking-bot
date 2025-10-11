@@ -23,6 +23,7 @@ import {
 } from "react";
 import {
   callForNewBalance,
+  callForNewBalanceViaPrompt,
   type Amount,
   type BalanceAction,
 } from "../api/GeminiBanking";
@@ -75,7 +76,7 @@ export default function OutlinedCard() {
           </CardActions>
         </Card>
       </Box>
-      <ChatbotEntryField></ChatbotEntryField>
+      <ChatbotEntryField balance={balance}></ChatbotEntryField>
       <FormDialog
         dialogState={dialogState}
         dialogOpen={dialogOpen}
@@ -191,7 +192,7 @@ function getDialogContent(state: BalanceAction): string {
   return "";
 }
 
-function ChatbotEntryField(): JSX.Element {
+function ChatbotEntryField({ balance }: { balance: Amount }): JSX.Element {
   return (
     <>
       <Box
@@ -211,7 +212,7 @@ function ChatbotEntryField(): JSX.Element {
             label="Try asking me to withdraw money."
             sx={{ flexGrow: 1 }}
           ></TextField>
-          <IconButton>
+          <IconButton onClick={() => callForNewBalanceViaPrompt("", balance)}>
             <Send></Send>
           </IconButton>
         </Box>
@@ -222,7 +223,7 @@ function ChatbotEntryField(): JSX.Element {
             marginTop: 2,
             border: "1px solid rgba(0, 0, 0, 0.12)",
             borderRadius: "4px",
-            minHeight: 300,
+            minHeight: 250,
           }}
         ></Box>
       </Box>
