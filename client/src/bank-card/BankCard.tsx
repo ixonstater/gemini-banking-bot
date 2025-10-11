@@ -13,16 +13,19 @@ import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import { Fragment, useState, type Dispatch, type SetStateAction } from "react";
-import type { Amount, BalanceAction } from "../api/GeminiBanking";
+import {
+  callForNewBalance,
+  type Amount,
+  type BalanceAction,
+} from "../api/GeminiBanking";
 
 type StateFunction<T> = Dispatch<SetStateAction<T>>;
-
-type DialogStateType = BalanceAction | "CLOSED";
 
 export default function OutlinedCard() {
   const [balance, setBalance] = useState<Amount>({ dollars: 0, cents: 0 });
 
-  const [dialogState, setDialogState] = useState<DialogStateType>("CLOSED");
+  const [dialogState, setDialogState] = useState<BalanceAction>("WITHDRAWAL");
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
     <Fragment>
@@ -38,10 +41,24 @@ export default function OutlinedCard() {
             <Typography variant="body2">{formatForDollars(balance)}</Typography>
           </CardContent>
           <CardActions>
-            <Button size="small" onClick={() => setDialogState("DEPOSIT")}>
+            <Button
+              size="small"
+              variant="contained"
+              onClick={() => {
+                setDialogOpen(true);
+                setDialogState("DEPOSIT");
+              }}
+            >
               Deposit
             </Button>
-            <Button size="small" onClick={() => setDialogState("WITHDRAWAL")}>
+            <Button
+              size="small"
+              variant="contained"
+              onClick={() => {
+                setDialogOpen(true);
+                setDialogState("WITHDRAWAL");
+              }}
+            >
               Withdrawal
             </Button>
           </CardActions>
@@ -49,12 +66,12 @@ export default function OutlinedCard() {
       </Box>
       <FormDialog
         dialogState={dialogState}
+        dialogOpen={dialogOpen}
+        setDialogOpen={setDialogOpen}
         submit={(amount) => {
-          setDialogState("CLOSED");
-          console.log(amount);
-        }}
-        cancel={() => {
-          setDialogState("CLOSED");
+          setBalance(
+            callForNewBalance(dialogState as BalanceAction, balance, amount)
+          );
         }}
       ></FormDialog>
     </Fragment>
@@ -72,12 +89,14 @@ function formatForDollars(amount: Amount): string {
 
 function FormDialog({
   dialogState,
+  dialogOpen,
+  setDialogOpen,
   submit,
-  cancel,
 }: {
-  dialogState: DialogStateType;
+  dialogState: BalanceAction;
+  dialogOpen: boolean;
+  setDialogOpen: StateFunction<boolean>;
   submit: (amount: Amount) => void;
-  cancel: () => void;
 }) {
   let [dollars, cents] = [0, 0];
 
@@ -85,8 +104,10 @@ function FormDialog({
     <Fragment>
       <Dialog
         sx={{ maxWidth: 450 }}
-        open={dialogState !== "CLOSED"}
-        onClose={cancel}
+        open={dialogOpen}
+        onClose={() => {
+          setDialogOpen(false);
+        }}
       >
         <DialogTitle>{getDialogTitle(dialogState)}</DialogTitle>
         <DialogContent>
@@ -115,15 +136,30 @@ function FormDialog({
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={cancel}>Cancel</Button>
-          <Button onClick={() => submit({ dollars, cents })}>Confirm</Button>
+          <Button
+            variant="outlined"
+            onClick={() => {
+              setDialogOpen(false);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              setDialogOpen(false);
+              submit({ dollars, cents });
+            }}
+          >
+            Confirm
+          </Button>
         </DialogActions>
       </Dialog>
     </Fragment>
   );
 }
 
-function getDialogTitle(state: DialogStateType): string {
+function getDialogTitle(state: BalanceAction): string {
   if (state === "DEPOSIT") {
     return "Deposit";
   } else if (state === "WITHDRAWAL") {
@@ -133,7 +169,7 @@ function getDialogTitle(state: DialogStateType): string {
   return "";
 }
 
-function getDialogContent(state: DialogStateType): string {
+function getDialogContent(state: BalanceAction): string {
   if (state === "DEPOSIT") {
     return "Please enter the amount you would like to deposit in dollars and cents.";
   } else if (state === "WITHDRAWAL") {
