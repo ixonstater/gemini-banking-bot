@@ -6,6 +6,9 @@ class Amount:
         self.dollars = dollars
         self.cents = cents
 
+    def fromJsonDict(dict: dict[str, object]):
+        return Amount(dict["dollars"], dict["cents"])
+
 
 class BalanceAction:
     withdrawal = "WITHDRAWAL"
@@ -21,8 +24,17 @@ class BalanceActionDTO:
     balance: Amount
     amount: Amount
 
+    def __init__(self, action, balance, amount):
+        self.action = action
+        self.balance = balance
+        self.amount = amount
+
     def fromJsonDict(dict: dict[str, object]):
-        pass
+        return BalanceActionDTO(
+            dict["action"],
+            Amount.fromJsonDict(dict["balance"]),
+            Amount.fromJsonDict(dict["amount"]),
+        )
 
 
 class BalanceActionResponseDTO:

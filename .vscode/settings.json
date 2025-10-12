@@ -1,5 +1,5 @@
 {
-  "cSpell.words": ["jsonify", "venv"],
+  "cSpell.words": ["dtos", "jsonify", "venv"],
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.organizeImports": "explicit"

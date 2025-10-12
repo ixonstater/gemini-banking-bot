@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+import service
 
 app = Flask(__name__)
 
@@ -16,7 +17,11 @@ def prompt_for_account_action():
 
 @app.route("/account/action")
 def directly_called_account_action():
-    pass
+    try:
+        return service.directly_called_account_action(request)
+
+    except Exception as e:
+        return (jsonify({"error": f"Error processing request: {str(e)}"}), 500)
 
 
 def serialize_response(response: str) -> dict:
