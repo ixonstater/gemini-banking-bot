@@ -3,12 +3,10 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 
-@app.route("/prompt", methods=["POST"])
-def prompt():
+@app.route("/account/prompt", methods=["POST"])
+def prompt_for_account_action():
     try:
         data: dict = request.get_json()
-        if not data or not validate_prompt(data):
-            return (jsonify({"error": "Unable to read request body."}), 400)
 
         return (jsonify(data), 200)
 
@@ -16,11 +14,9 @@ def prompt():
         return (jsonify({"error": f"Error processing request: {str(e)}"}), 500)
 
 
-def validate_prompt(data: dict) -> bool:
-    if not "prompt" in data:
-        return False
-
-    return True
+@app.route("/account/action")
+def directly_called_account_action():
+    pass
 
 
 def serialize_response(response: str) -> dict:

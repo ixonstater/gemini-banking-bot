@@ -6,4 +6,5 @@ Use the given input to determine which of these functions, if any, you should ca
 If you decide to call a function respond with the exact name of the function and its arguments in a comma-separated ordered list.
 If no function should be called, which should be the case unless very clearly indicated, respond with no_function_called.
 If the user seems frustrated or angry respond with escalate_user.
-The given input is f"{input}".
+If the user seems confused or to be asking for guidance respond with help_requested.
+The given input is {{input}}.

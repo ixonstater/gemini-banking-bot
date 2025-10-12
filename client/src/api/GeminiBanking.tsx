@@ -7,8 +7,13 @@ export type Amount = {
 
 type BalanceActionDTO = {
   action: BalanceAction;
-  actionAmount: Amount;
-  currentBalance: Amount;
+  amount: Amount;
+  balance: Amount;
+};
+
+type BalancePromptActionDTO = {
+  prompt: string;
+  balance: Amount;
 };
 
 export function callForNewBalance(
