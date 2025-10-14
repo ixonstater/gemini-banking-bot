@@ -1,3 +1,4 @@
+import math
 from flask import Request, Response, jsonify
 from request_dtos import *
 from google import genai
@@ -46,6 +47,11 @@ def _deposit(
         return BalanceActionError.negativeBalanceAmount(), Amount.empty()
 
     balance.cents += amount.cents
+    if balance.cents > 99:
+        dollars_in_cents = math.floor(balance.cents / 100)
+        balance.cents -= 100 * dollars_in_cents
+        balance.dollars += dollars_in_cents
+
     balance.dollars += amount.dollars
 
     return BalanceActionError.noError(), balance

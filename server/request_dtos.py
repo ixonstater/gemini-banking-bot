@@ -1,3 +1,4 @@
+import math
 from typing import Any
 
 
@@ -25,8 +26,9 @@ class Amount:
         cents: int = self.cents - amount.cents
 
         if cents < 0:
-            cents = 100 - abs(cents)
-            dollars -= 1
+            dollars_in_cents = math.floor(amount.cents / 100) + 1
+            dollars -= dollars_in_cents
+            cents = (self.cents - amount.cents) % 100
 
         return Amount(dollars, cents)
 
