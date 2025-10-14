@@ -20,6 +20,16 @@ class Amount:
     def toJson(self) -> dict[str, Any]:
         return {"dollars": self.dollars, "cents": self.cents}
 
+    def minus(self, amount: Amount):
+        dollars: int = self.dollars - amount.dollars
+        cents: int = self.cents - amount.cents
+
+        if cents < 0:
+            cents = 100 - abs(cents)
+            dollars -= 1
+
+        return Amount(dollars, cents)
+
 
 class BalanceAction:
     withdrawal = "WITHDRAWAL"

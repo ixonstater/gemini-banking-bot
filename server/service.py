@@ -20,18 +20,32 @@ def directly_called_account_action(request: Request):
 
 
 def _withdrawal(amount: Amount, balance: Amount) -> tuple[BalanceActionError, Amount]:
-    return (BalanceActionError(), Amount(0, 0))
+    if amount.cents < 0 or amount.dollars < 0:
+        return BalanceActionError.negativeDepositAmount(), Amount.empty()
+    elif balance.cents < 0 or balance.dollars < 0:
+        return BalanceActionError.negativeBalanceAmount(), Amount.empty()
+    elif _is_overdrawn(amount, balance):
+        return BalanceActionError.insufficientFunds(), Amount.empty()
+
+    return BalanceActionError.noError(), balance.minus(amount)
+
+
+def _is_overdrawn(amount: Amount, balance: Amount) -> bool:
+    difference: Amount = balance.minus(amount)
+
+    # Due to the logic in the Amount.minus call, cents will always be positive
+    return difference.dollars < 0
 
 
 def _deposit(
     amount: Amount, balance: Amount
 ) -> tuple[BalanceActionError, Amount | None]:
     if amount.cents < 0 or amount.dollars < 0:
-        return (BalanceActionError.negativeDepositAmount(), Amount.empty())
+        return BalanceActionError.negativeDepositAmount(), Amount.empty()
     elif balance.cents < 0 or balance.dollars < 0:
-        return (BalanceActionError.negativeBalanceAmount(), Amount.empty())
+        return BalanceActionError.negativeBalanceAmount(), Amount.empty()
 
     balance.cents += amount.cents
     balance.dollars += amount.dollars
 
-    return (BalanceActionError.noError(), balance)
+    return BalanceActionError.noError(), balance
