@@ -40,7 +40,7 @@ type ErrorSnackState = {
 const uiMaxWidth = 400;
 const uiMinWidth = 275;
 
-export default function OutlinedCard() {
+export default function BankCard() {
   const [balance, setBalance] = useState<Amount>({ dollars: 0, cents: 0 });
 
   const [dialogState, setDialogState] = useState<BalanceAction>("WITHDRAWAL");
@@ -332,6 +332,24 @@ function ChatbotEntryField({
         >
           <Typography>{chatResponse}</Typography>
         </Box>
+        <Typography sx={{ marginTop: 2 }}>
+          This chatbot uses simple prompt wrapping to work with the deposit and
+          withdrawal server endpoints. Try the following to see some additional
+          value it adds:
+        </Typography>
+        <ul>
+          <li>
+            <Typography>Submit a prompt as a frustrated user.</Typography>
+          </li>
+          <li>
+            <Typography>Submit a prompt as a confused user.</Typography>
+          </li>
+          <li>
+            <Typography>
+              Submit a prompt which is not related to the task at hand.
+            </Typography>
+          </li>
+        </ul>
       </Box>
     </>
   );
