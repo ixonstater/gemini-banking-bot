@@ -1,15 +1,15 @@
 from flask import Flask, request, jsonify
 import service
+from dotenv import load_dotenv
 
+load_dotenv()
 app = Flask(__name__)
 
 
 @app.route("/account/prompt", methods=["POST"])
 def prompt_for_account_action():
     try:
-        data: dict = request.get_json()
-
-        return (jsonify(data), 200)
+        return service.prompted_account_action(request)
 
     except Exception as e:
         return (jsonify({"error": f"Error processing request: {str(e)}"}), 500)

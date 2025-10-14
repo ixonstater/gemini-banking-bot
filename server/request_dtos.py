@@ -106,9 +106,13 @@ class BalancePromptActionDTO:
     prompt: str
     balance: Amount
 
+    def __init__(self, prompt: str, balance: Amount):
+        self.prompt = prompt
+        self.balance = balance
+
     @staticmethod
     def fromJson(dict: dict[str, Any]) -> BalancePromptActionDTO:
-        pass
+        return BalancePromptActionDTO(dict["prompt"], dict["balance"])
 
 
 class BalancePromptActionResponseDTO:
