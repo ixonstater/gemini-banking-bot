@@ -64,7 +64,7 @@ Second a function to withdraw money from a users bank account named {FUNCTION_NA
 Use the given input to determine which of these functions, if any, you should call.
 If you decide to call a function respond with the exact name of the function followed by a space and its arguments.
 Function arguments should be printed in a comma-separated ordered list, do not surround the argument list with parenthesis or brackets.
-If no function should be called, which should be the case unless very clearly indicated, respond with {FUNCTION_NAME_NO_FUNCTION_CALLED}.
+If no function should be called, which should be the case unless very clearly indicated, respond with whatever output seems appropriate to best aid the user based on the instruction context given in this prompt and preface your response with {FUNCTION_NAME_NO_FUNCTION_CALLED}.
 If the user seems frustrated or angry respond with {FUNCTION_NAME_ESCALATE}.
 If the user seems confused or to be asking for guidance respond with {FUNCTION_NAME_HELP}.
 The given input is: "*user_input*"
@@ -91,23 +91,29 @@ def prompted_account_action(request: Request) -> Response:
     client = genai.Client()
     initial_response = _send_initial_prompt(obj.prompt, client)
     print("Got back from LLM: ", initial_response)
+
+    if FUNCTION_NAME_NO_FUNCTION_CALLED in initial_response:
+        return jsonify(
+            BalancePromptActionResponseDTO(
+                False,
+                False,
+                initial_response.replace(FUNCTION_NAME_NO_FUNCTION_CALLED, ""),
+                Amount.empty(),
+                BalanceActionError.noError(),
+            ).toJson()
+        )
+
     parsed = _parse_initial_response(initial_response)
 
     if len(parsed) < 1 or FUNCTION_NAME_HELP in parsed[0]:
         return jsonify(
             BalancePromptActionResponseDTO(
-                False, False, HELP_RESPONSE, obj.balance, BalanceActionError.noError()
-            ).toJson()
-        )
-    elif FUNCTION_NAME_NO_FUNCTION_CALLED in parsed[0]:
-        return jsonify(
-            BalancePromptActionResponseDTO(
                 False,
                 False,
-                initial_response,
-                obj.balance,
+                HELP_RESPONSE,
+                Amount.empty(),
                 BalanceActionError.noError(),
-            )
+            ).toJson()
         )
     elif FUNCTION_NAME_ESCALATE in parsed[0]:
         return jsonify(
@@ -115,7 +121,7 @@ def prompted_account_action(request: Request) -> Response:
                 False,
                 True,
                 ESCALATE_RESPONSE,
-                obj.balance,
+                Amount.empty(),
                 BalanceActionError.noError(),
             ).toJson()
         )
@@ -125,7 +131,7 @@ def prompted_account_action(request: Request) -> Response:
                 False,
                 False,
                 MISSING_INFORMATION_RESPONSE,
-                obj.balance,
+                Amount.empty(),
                 BalanceActionError.noError(),
             ).toJson()
         )
@@ -138,7 +144,7 @@ def prompted_account_action(request: Request) -> Response:
                 False,
                 False,
                 HELP_RESPONSE,
-                obj.balance,
+                Amount.empty(),
                 BalanceActionError.noError(),
             ).toJson()
         )
@@ -153,7 +159,11 @@ def prompted_account_action(request: Request) -> Response:
     if response.error.hasError():
         return jsonify(
             BalancePromptActionResponseDTO(
-                False, False, ERROR_DURING_ACCOUNT_ACTION, obj.balance, response.error
+                False,
+                False,
+                ERROR_DURING_ACCOUNT_ACTION,
+                Amount.empty(),
+                response.error,
             ).toJson()
         )
 

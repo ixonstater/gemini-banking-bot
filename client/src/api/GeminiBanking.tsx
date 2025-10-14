@@ -16,6 +16,14 @@ type BalancePromptActionDTO = {
   balance: Amount;
 };
 
+type BalancePromptActionResponseDTO = {
+  balance: Amount;
+  balanceActionError: BalanceActionError;
+  escalateUser: boolean;
+  response: string;
+  success: boolean;
+};
+
 type BalanceActionResponseDTO = {
   success: boolean;
   error: BalanceActionError;
@@ -41,19 +49,21 @@ export async function callForNewBalance(
 
   const json = await response.json();
 
-  return {
-    success: json.success,
-    error: json.error,
-    balance: json.balance,
-  };
+  return json;
 }
 
-export function callForNewBalanceViaPrompt(
-  prompt: string,
-  balance: Amount
-): Amount {
-  return {
-    dollars: 0,
-    cents: 0,
-  };
+export async function callForNewBalanceViaPrompt(
+  body: BalancePromptActionDTO
+): Promise<BalancePromptActionResponseDTO> {
+  const response = await fetch("/api/account/prompt", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  const json = await response.json();
+
+  return json;
 }

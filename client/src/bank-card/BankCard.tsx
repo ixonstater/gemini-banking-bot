@@ -91,6 +91,7 @@ export default function OutlinedCard() {
       <ChatbotEntryField
         setErrorSnackState={setErrorSnackState}
         balance={balance}
+        setBalance={setBalance}
       ></ChatbotEntryField>
       <FormDialog
         dialogState={dialogState}
@@ -118,14 +119,15 @@ export default function OutlinedCard() {
 
 function openErrorSnackBar(
   setErrorSnackState: StateFunction<ErrorSnackState>,
-  error: BalanceActionError
+  error: BalanceActionError,
+  delay: number = 7000
 ) {
   setErrorSnackState({
     open: true,
     msg: getErrorMessageFromErrorType(error),
   });
 
-  setTimeout(() => setErrorSnackState({ open: false, msg: "" }), 7000);
+  setTimeout(() => setErrorSnackState({ open: false, msg: "" }), delay);
 }
 
 function getErrorMessageFromErrorType(error: BalanceActionError): string {
@@ -244,11 +246,17 @@ function getDialogContent(state: BalanceAction): string {
 
 function ChatbotEntryField({
   balance,
+  setBalance,
   setErrorSnackState,
 }: {
   balance: Amount;
+  setBalance: StateFunction<Amount>;
   setErrorSnackState: StateFunction<ErrorSnackState>;
 }): JSX.Element {
+  const [chatResponse, setChatResponse] = useState("");
+  const [escalateUser, setEscalateUser] = useState(false);
+  let prompt = "";
+
   return (
     <>
       <Box
@@ -265,13 +273,52 @@ function ChatbotEntryField({
         </Typography>
         <Box sx={{ display: "flex" }}>
           <TextField
+            onChange={(event) => {
+              prompt = event.target.value;
+            }}
             label="Try asking me to withdraw money."
             sx={{ flexGrow: 1 }}
           ></TextField>
-          <IconButton onClick={() => callForNewBalanceViaPrompt("", balance)}>
+          <IconButton
+            onClick={async () => {
+              const response = await callForNewBalanceViaPrompt({
+                prompt,
+                balance,
+              });
+
+              setChatResponse(response.response);
+
+              if (response.success) {
+                setBalance(response.balance);
+                return;
+              }
+
+              if (response.balanceActionError != "NO_ERROR") {
+                openErrorSnackBar(
+                  setErrorSnackState,
+                  response.balanceActionError,
+                  20000
+                );
+              }
+
+              if (response.escalateUser) {
+                setEscalateUser(true);
+              }
+            }}
+          >
             <Send></Send>
           </IconButton>
         </Box>
+        {escalateUser ? (
+          <Button
+            sx={{ marginTop: 2 }}
+            size="small"
+            variant="contained"
+            onClick={() => alert("This button does nothing important.")}
+          >
+            Chat with a human
+          </Button>
+        ) : null}
         <Box
           sx={{
             minWidth: uiMinWidth,
@@ -280,8 +327,11 @@ function ChatbotEntryField({
             border: "1px solid rgba(0, 0, 0, 0.12)",
             borderRadius: "4px",
             minHeight: 250,
+            padding: 2,
           }}
-        ></Box>
+        >
+          <Typography>{chatResponse}</Typography>
+        </Box>
       </Box>
     </>
   );
