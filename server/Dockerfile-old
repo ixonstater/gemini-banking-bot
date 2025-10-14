@@ -1,0 +1,5 @@
+FROM tecktron/python-waitress:python-3.12-slim
+
+COPY ./wsgi.py ./request_dtos.py ./service.py requirements.txt /app/
+COPY ./.env-prod /app/.env
+RUN pip install -r /app/requirements.txt

@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request, jsonify
 import waitress
 import service
@@ -25,5 +26,6 @@ def directly_called_account_action():
         return (jsonify({"error": f"Error processing request: {str(e)}"}), 500)
 
 
-if __name__ == "__main__":
+# In prod the app variable above gets picked up by the containers waitress instance
+if __name__ == "__main__" and os.getenv("GEMINI_BANKING_ENVIRONMENT") != "prod":
     waitress.serve(app, host="0.0.0.0", port=8080)

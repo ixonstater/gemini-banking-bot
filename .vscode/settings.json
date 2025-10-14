@@ -1,5 +1,13 @@
 {
-  "cSpell.words": ["dotenv", "dtos", "genai", "jsonify", "venv"],
+  "cSpell.words": [
+    "dotenv",
+    "dtos",
+    "genai",
+    "jsonify",
+    "trixie",
+    "venv",
+    "wsgi"
+  ],
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.organizeImports": "explicit"

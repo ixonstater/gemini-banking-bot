@@ -1,4 +1,6 @@
 .env
+.env-prod
+gemini-banking-server.tar
 **/.venv-env/*
 
 # Logs
