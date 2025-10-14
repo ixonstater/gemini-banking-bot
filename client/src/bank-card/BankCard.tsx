@@ -88,7 +88,10 @@ export default function OutlinedCard() {
           </CardActions>
         </Card>
       </Box>
-      <ChatbotEntryField balance={balance}></ChatbotEntryField>
+      <ChatbotEntryField
+        setErrorSnackState={setErrorSnackState}
+        balance={balance}
+      ></ChatbotEntryField>
       <FormDialog
         dialogState={dialogState}
         dialogOpen={dialogOpen}
@@ -239,7 +242,13 @@ function getDialogContent(state: BalanceAction): string {
   return "";
 }
 
-function ChatbotEntryField({ balance }: { balance: Amount }): JSX.Element {
+function ChatbotEntryField({
+  balance,
+  setErrorSnackState,
+}: {
+  balance: Amount;
+  setErrorSnackState: StateFunction<ErrorSnackState>;
+}): JSX.Element {
   return (
     <>
       <Box
