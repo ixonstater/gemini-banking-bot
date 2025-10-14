@@ -112,22 +112,35 @@ class BalancePromptActionDTO:
 
     @staticmethod
     def fromJson(dict: dict[str, Any]) -> BalancePromptActionDTO:
-        return BalancePromptActionDTO(dict["prompt"], dict["balance"])
+        return BalancePromptActionDTO(dict["prompt"], Amount.fromJson(dict["balance"]))
 
 
 class BalancePromptActionResponseDTO:
-    response: str
     success: bool
+    escalateUser: bool
+    response: str
     balance: Amount
+    balanceActionError: BalanceActionError
 
-    def __init__(self, success: bool, response: str, balance: Amount):
+    def __init__(
+        self,
+        success: bool,
+        escalateUser: bool,
+        response: str,
+        balance: Amount,
+        balanceActionError: BalanceActionError,
+    ):
         self.response = response
         self.success = success
+        self.escalateUser = escalateUser
         self.balance = balance
+        self.balanceActionError = balanceActionError
 
     def toJson(self) -> dict[str, Any]:
         return {
-            "response": self.response,
             "success": self.success,
-            "balance": self.balance,
+            "escalateUser": self.escalateUser,
+            "response": self.response,
+            "balance": self.balance.toJson(),
+            "balanceActionError": self.balanceActionError.toJson(),
         }

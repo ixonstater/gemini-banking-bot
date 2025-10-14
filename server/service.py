@@ -5,7 +5,10 @@ from google import genai
 
 def directly_called_account_action(request: Request) -> Response:
     obj: BalanceActionDTO = BalanceActionDTO.fromJson(request.get_json())
+    return jsonify(_directly_called_account_action(obj).toJson())
 
+
+def _directly_called_account_action(obj: BalanceActionDTO) -> BalanceActionResponseDTO:
     result: tuple[BalanceActionError, Amount]
 
     if obj.action == BalanceAction.withdrawal:
@@ -13,11 +16,7 @@ def directly_called_account_action(request: Request) -> Response:
     elif obj.action == BalanceAction.deposit:
         result = _deposit(obj.amount, obj.balance)
 
-    return jsonify(
-        BalanceActionResponseDTO(
-            not result[0].hasError(), result[0], result[1]
-        ).toJson()
-    )
+    return BalanceActionResponseDTO(not result[0].hasError(), result[0], result[1])
 
 
 def _withdrawal(amount: Amount, balance: Amount) -> tuple[BalanceActionError, Amount]:
@@ -56,6 +55,7 @@ FUNCTION_NAME_DEPOSIT = "deposit_money"
 FUNCTION_NAME_WITHDRAWAL = "withdraw_money"
 FUNCTION_NAME_ESCALATE = "escalate_user"
 FUNCTION_NAME_HELP = "help_requested"
+FUNCTION_NAME_NO_FUNCTION_CALLED = "no_function_called"
 
 PROMPT_FOR_FUNCTION = f"""
 You have access to a variety of hidden functional tools and must decide which, if any, to call.
@@ -64,19 +64,23 @@ Second a function to withdraw money from a users bank account named {FUNCTION_NA
 Use the given input to determine which of these functions, if any, you should call.
 If you decide to call a function respond with the exact name of the function followed by a space and its arguments.
 Function arguments should be printed in a comma-separated ordered list, do not surround the argument list with parenthesis or brackets.
-If no function should be called, which should be the case unless very clearly indicated, respond with no_function_called.
+If no function should be called, which should be the case unless very clearly indicated, respond with {FUNCTION_NAME_NO_FUNCTION_CALLED}.
 If the user seems frustrated or angry respond with {FUNCTION_NAME_ESCALATE}.
 If the user seems confused or to be asking for guidance respond with {FUNCTION_NAME_HELP}.
 The given input is: "*user_input*"
 """
 
-WITHDRAWAL_RESPONSE_WITH_NEW_BALANCE = """
-Funds withdrawn successfully.  Your new account balance is *dollars* dollars and *cents* cents.  Have a wonderful day!
-"""
+HELP_RESPONSE = """Hmm, it seems like we couldn't understand what you wanted to do.  You can withdraw money or deposit money here.  If you ask to withdraw or deposit money, please include the exact amount you wish to withdraw or deposit in your request."""
 
-DEPOSIT_RESPONSE_WITH_NEW_BALANCE = """
-Funds deposited successfully.  Your new account balance is *dollars* dollars and *cents* cents.  Have a wonderful day!
-"""
+MISSING_INFORMATION_RESPONSE = """Seems like we didn't get enough information to complete your request.  Please make sure to include the dollar and cent amounts you wish to withdraw or deposit from / to your account."""
+
+ERROR_DURING_ACCOUNT_ACTION = """It looks like an error occurred, please check the on screen message and correct your request."""
+
+ESCALATE_RESPONSE = """We're sorry this isn't working out for you.  If you would like to speak to a customer service representative please call us at 1-800-800-8000."""
+
+WITHDRAWAL_RESPONSE_WITH_NEW_BALANCE = """Funds withdrawn successfully.  Your new account balance is *dollars* dollars and *cents* cents.  Have a wonderful day!"""
+
+DEPOSIT_RESPONSE_WITH_NEW_BALANCE = """Funds deposited successfully.  Your new account balance is *dollars* dollars and *cents* cents.  Have a wonderful day!"""
 
 model = "gemini-2.5-flash"
 
@@ -86,13 +90,116 @@ def prompted_account_action(request: Request) -> Response:
 
     client = genai.Client()
     initial_response = _send_initial_prompt(obj.prompt, client)
+    print("Got back from LLM: ", initial_response)
+    parsed = _parse_initial_response(initial_response)
 
-    return jsonify({"response": initial_response})
+    if len(parsed) < 1 or FUNCTION_NAME_HELP in parsed[0]:
+        return jsonify(
+            BalancePromptActionResponseDTO(
+                False, False, HELP_RESPONSE, obj.balance, BalanceActionError.noError()
+            ).toJson()
+        )
+    elif FUNCTION_NAME_NO_FUNCTION_CALLED in parsed[0]:
+        return jsonify(
+            BalancePromptActionResponseDTO(
+                False,
+                False,
+                initial_response,
+                obj.balance,
+                BalanceActionError.noError(),
+            )
+        )
+    elif FUNCTION_NAME_ESCALATE in parsed[0]:
+        return jsonify(
+            BalancePromptActionResponseDTO(
+                False,
+                True,
+                ESCALATE_RESPONSE,
+                obj.balance,
+                BalanceActionError.noError(),
+            ).toJson()
+        )
+    elif len(parsed) != 3:
+        return jsonify(
+            BalancePromptActionResponseDTO(
+                False,
+                False,
+                MISSING_INFORMATION_RESPONSE,
+                obj.balance,
+                BalanceActionError.noError(),
+            ).toJson()
+        )
+
+    function_deposit = FUNCTION_NAME_DEPOSIT in parsed[0]
+    function_withdrawal = FUNCTION_NAME_WITHDRAWAL in parsed[0]
+    if not (function_deposit or function_withdrawal):
+        return jsonify(
+            BalancePromptActionResponseDTO(
+                False,
+                False,
+                HELP_RESPONSE,
+                obj.balance,
+                BalanceActionError.noError(),
+            ).toJson()
+        )
+
+    balance_action_dto = BalanceActionDTO(
+        BalanceAction.deposit if function_deposit else BalanceAction.withdrawal,
+        obj.balance,
+        Amount(int(parsed[1]), int(parsed[2])),
+    )
+
+    response = _directly_called_account_action(balance_action_dto)
+    if response.error.hasError():
+        return jsonify(
+            BalancePromptActionResponseDTO(
+                False, False, ERROR_DURING_ACCOUNT_ACTION, obj.balance, response.error
+            ).toJson()
+        )
+
+    return jsonify(
+        BalancePromptActionResponseDTO(
+            True,
+            False,
+            (
+                _set_balance_on_response_message(
+                    (
+                        WITHDRAWAL_RESPONSE_WITH_NEW_BALANCE
+                        if function_withdrawal
+                        else DEPOSIT_RESPONSE_WITH_NEW_BALANCE
+                    ),
+                    response.balance,
+                )
+            ),
+            response.balance,
+            response.error,
+        ).toJson()
+    )
+
+
+def _set_balance_on_response_message(response: str, balance: Amount) -> str:
+    return response.replace("*dollars*", str(balance.dollars)).replace(
+        "*cents*", str(balance.cents)
+    )
+
+
+def _parse_initial_response(response: str) -> list[str]:
+    space_removed = response.split(" ")
+    final_split = []
+
+    for arg in space_removed:
+        comma_split = arg.split(",")
+        if len(comma_split) == 1:
+            final_split.append(arg)
+        else:
+            final_split.extend(comma_split)
+
+    return list(filter(lambda elem: elem and not elem.isspace(), final_split))
 
 
 def _send_initial_prompt(prompt: str, client: genai.Client) -> str:
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model=model,
         contents=PROMPT_FOR_FUNCTION.replace("*user_input*", prompt),
     )
     return response.text
