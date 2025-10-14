@@ -1,5 +1,6 @@
 import { Send } from "@mui/icons-material";
 import {
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -163,7 +164,7 @@ function FormDialog({
   setDialogOpen: StateFunction<boolean>;
   submit: (amount: Amount) => void;
 }) {
-  let [dollars, cents] = [0, 0];
+  let [currency, setCurrency] = useState<Amount>({ dollars: 0, cents: 0 });
 
   return (
     <Fragment>
@@ -186,7 +187,11 @@ function FormDialog({
               label="Dollars"
               type="number"
               variant="standard"
-              onChange={(event) => (dollars = parseInt(event.target.value))}
+              onChange={(event) => {
+                let newCurrency = { ...currency };
+                newCurrency.dollars = parseInt(event.target.value);
+                setCurrency(newCurrency);
+              }}
             />
             <TextField
               autoFocus
@@ -196,7 +201,11 @@ function FormDialog({
               label="Cents"
               type="number"
               variant="standard"
-              onChange={(event) => (cents = parseInt(event.target.value))}
+              onChange={(event) => {
+                let newCurrency = { ...currency };
+                newCurrency.cents = parseInt(event.target.value);
+                setCurrency(newCurrency);
+              }}
             />
           </Box>
         </DialogContent>
@@ -213,7 +222,7 @@ function FormDialog({
             variant="contained"
             onClick={() => {
               setDialogOpen(false);
-              submit({ dollars, cents });
+              submit(currency);
             }}
           >
             Confirm
@@ -255,7 +264,8 @@ function ChatbotEntryField({
 }): JSX.Element {
   const [chatResponse, setChatResponse] = useState("");
   const [escalateUser, setEscalateUser] = useState(false);
-  let prompt = "";
+  const [loading, setLoading] = useState(false);
+  const [prompt, setPrompt] = useState("");
 
   return (
     <>
@@ -273,41 +283,52 @@ function ChatbotEntryField({
         </Typography>
         <Box sx={{ display: "flex" }}>
           <TextField
+            value={prompt}
             onChange={(event) => {
-              prompt = event.target.value;
+              setPrompt(event.target.value);
             }}
             label="Try asking me to withdraw money."
             sx={{ flexGrow: 1 }}
           ></TextField>
-          <IconButton
-            onClick={async () => {
-              const response = await callForNewBalanceViaPrompt({
-                prompt,
-                balance,
-              });
-
-              setChatResponse(response.response);
-
-              if (response.success) {
-                setBalance(response.balance);
-                return;
-              }
-
-              if (response.balanceActionError != "NO_ERROR") {
-                openErrorSnackBar(
-                  setErrorSnackState,
-                  response.balanceActionError,
-                  20000
-                );
-              }
-
-              if (response.escalateUser) {
-                setEscalateUser(true);
-              }
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            <Send></Send>
-          </IconButton>
+            <IconButton
+              onClick={async () => {
+                setLoading(true);
+                const response = await callForNewBalanceViaPrompt({
+                  prompt,
+                  balance,
+                });
+                setLoading(false);
+
+                setChatResponse(response.response);
+
+                if (response.success) {
+                  setBalance(response.balance);
+                  return;
+                }
+
+                if (response.balanceActionError != "NO_ERROR") {
+                  openErrorSnackBar(
+                    setErrorSnackState,
+                    response.balanceActionError,
+                    20000
+                  );
+                }
+
+                if (response.escalateUser) {
+                  setEscalateUser(true);
+                }
+              }}
+            >
+              <Send></Send>
+            </IconButton>
+          </Box>
         </Box>
         {escalateUser ? (
           <Button
@@ -328,9 +349,23 @@ function ChatbotEntryField({
             borderRadius: "4px",
             minHeight: 250,
             padding: 2,
+            display: "flex",
           }}
         >
-          <Typography>{chatResponse}</Typography>
+          {loading ? (
+            <Box
+              sx={{
+                flexGrow: 1,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <CircularProgress />
+            </Box>
+          ) : (
+            <Typography>{chatResponse}</Typography>
+          )}
         </Box>
         <Typography sx={{ marginTop: 2 }}>
           This chatbot uses simple prompt wrapping to work with the deposit and
