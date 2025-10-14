@@ -1,3 +1,6 @@
+from typing import Any
+
+
 class Amount:
     dollars: int = 0
     cents: int = 0
@@ -6,7 +9,8 @@ class Amount:
         self.dollars = dollars
         self.cents = cents
 
-    def fromJsonDict(dict: dict[str, object]):
+    @staticmethod
+    def fromJsonDict(dict: dict[str, Any]):
         return Amount(dict["dollars"], dict["cents"])
 
 
@@ -29,7 +33,8 @@ class BalanceActionDTO:
         self.balance = balance
         self.amount = amount
 
-    def fromJsonDict(dict: dict[str, object]):
+    @staticmethod
+    def fromJsonDict(dict: dict[str, Any]):
         return BalanceActionDTO(
             dict["action"],
             Amount.fromJsonDict(dict["balance"]),
@@ -47,15 +52,16 @@ class BalanceActionResponseDTO:
         self.error = error
         self.balance = balance
 
-    def toJsonDict(self) -> dict[str, object]:
-        pass
+    def toJsonDict(self) -> dict[str, Any]:
+        return {"success": self.success, "error": self.error, "balance": self.balance}
 
 
 class BalancePromptActionDTO:
     prompt: str
     balance: Amount
 
-    def fromJsonDict(dict: dict[str, object]):
+    @staticmethod
+    def fromJsonDict(dict: dict[str, Any]):
         pass
 
 
@@ -69,5 +75,9 @@ class BalancePromptActionResponseDTO:
         self.success = success
         self.balance = balance
 
-    def toJsonDict(self) -> dict[str, object]:
-        pass
+    def toJsonDict(self) -> dict[str, Any]:
+        return {
+            "response": self.response,
+            "success": self.success,
+            "balance": self.balance,
+        }

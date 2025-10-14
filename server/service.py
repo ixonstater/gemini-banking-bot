@@ -5,7 +5,7 @@ from request_dtos import *
 def directly_called_account_action(request: Request):
     obj: BalanceActionDTO = BalanceActionDTO.fromJsonDict(request.get_json())
 
-    result: tuple[BalanceActionError, Amount] = None
+    result: tuple[BalanceActionError, Amount]
 
     if obj.action == BalanceAction.withdrawal:
         result = _withdrawal(obj.amount, obj.balance)
@@ -17,8 +17,8 @@ def directly_called_account_action(request: Request):
 
 
 def _withdrawal(amount: Amount, balance: Amount) -> tuple[BalanceActionError, Amount]:
-    pass
+    return (BalanceActionError(), Amount(0, 0))
 
 
-def _deposit(amount: Amount, balance: Amount) -> Amount | BalanceActionError:
-    pass
+def _deposit(amount: Amount, balance: Amount) -> tuple[BalanceActionError, Amount]:
+    return (BalanceActionError(), Amount(0, 0))

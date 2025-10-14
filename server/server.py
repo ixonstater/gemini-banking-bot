@@ -24,9 +24,5 @@ def directly_called_account_action():
         return (jsonify({"error": f"Error processing request: {str(e)}"}), 500)
 
 
-def serialize_response(response: str) -> dict:
-    return jsonify({"response": response})
-
-
 if __name__ == "__main__":
     app.run(debug=False)
