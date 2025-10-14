@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Gemini Banking",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

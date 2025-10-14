@@ -1,0 +1,25 @@
+meta {
+  name: Manual Balance Action
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost:8080/account/action
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "action": "DEPOSIT",
+    "balance": {
+      "dollars": "10",
+      "cents": "5"
+    }
+  }
+}
+
+settings {
+  encodeUrl: true
+}

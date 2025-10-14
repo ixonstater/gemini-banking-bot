@@ -25,4 +25,4 @@ def directly_called_account_action():
 
 
 if __name__ == "__main__":
-    app.run(debug=False)
+    app.run(debug=False, port=8080)
