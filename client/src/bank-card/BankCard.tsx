@@ -6,6 +6,7 @@ import {
   DialogContentText,
   DialogTitle,
   IconButton,
+  Snackbar,
   TextField,
 } from "@mui/material";
 import Box from "@mui/material/Box";
@@ -26,9 +27,15 @@ import {
   callForNewBalanceViaPrompt,
   type Amount,
   type BalanceAction,
+  type BalanceActionError,
 } from "../api/GeminiBanking";
 
 type StateFunction<T> = Dispatch<SetStateAction<T>>;
+
+type ErrorSnackState = {
+  open: boolean;
+  msg: string;
+};
 
 const uiMaxWidth = 400;
 const uiMinWidth = 275;
@@ -38,6 +45,11 @@ export default function OutlinedCard() {
 
   const [dialogState, setDialogState] = useState<BalanceAction>("WITHDRAWAL");
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  const [errorSnackState, setErrorSnackState] = useState<ErrorSnackState>({
+    open: false,
+    msg: "",
+  });
 
   return (
     <Fragment>
@@ -81,14 +93,49 @@ export default function OutlinedCard() {
         dialogState={dialogState}
         dialogOpen={dialogOpen}
         setDialogOpen={setDialogOpen}
-        submit={(amount) => {
-          setBalance(
-            callForNewBalance(dialogState as BalanceAction, balance, amount)
-          );
+        submit={async (amount) => {
+          const newBalance = await callForNewBalance({
+            action: dialogState as BalanceAction,
+            balance,
+            amount,
+          });
+
+          if (!newBalance.success) {
+            openErrorSnackBar(setErrorSnackState, newBalance.error);
+            return;
+          }
+
+          setBalance(newBalance.balance);
         }}
       ></FormDialog>
+      <ErrorSnackBar state={errorSnackState}></ErrorSnackBar>
     </Fragment>
   );
+}
+
+function openErrorSnackBar(
+  setErrorSnackState: StateFunction<ErrorSnackState>,
+  error: BalanceActionError
+) {
+  setErrorSnackState({
+    open: true,
+    msg: getErrorMessageFromErrorType(error),
+  });
+
+  setTimeout(() => setErrorSnackState({ open: false, msg: "" }), 7000);
+}
+
+function getErrorMessageFromErrorType(error: BalanceActionError): string {
+  switch (error) {
+    case "INSUFFICIENT_FUNDS":
+      return "Insufficient funds for withdrawal amount.";
+    case "NEGATIVE_BALANCE":
+      return "Negative balance given, contact customer service for help.";
+    case "NEGATIVE_DEPOSIT_AMOUNT":
+      return "Negative transfer amount given, dollars and cents must be positive.";
+    default:
+      return "";
+  }
 }
 
 function formatForDollars(amount: Amount): string {
@@ -228,5 +275,15 @@ function ChatbotEntryField({ balance }: { balance: Amount }): JSX.Element {
         ></Box>
       </Box>
     </>
+  );
+}
+
+function ErrorSnackBar({ state }: { state: ErrorSnackState }): JSX.Element {
+  return (
+    <Snackbar
+      anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      open={state.open}
+      message={state.msg}
+    />
   );
 }

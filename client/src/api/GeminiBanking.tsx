@@ -16,14 +16,35 @@ type BalancePromptActionDTO = {
   balance: Amount;
 };
 
-export function callForNewBalance(
-  action: BalanceAction,
-  balance: Amount,
-  amount: Amount
-): Amount {
+type BalanceActionResponseDTO = {
+  success: boolean;
+  error: BalanceActionError;
+  balance: Amount;
+};
+
+export type BalanceActionError =
+  | "NO_ERROR"
+  | "INSUFFICIENT_FUNDS"
+  | "NEGATIVE_DEPOSIT_AMOUNT"
+  | "NEGATIVE_BALANCE";
+
+export async function callForNewBalance(
+  body: BalanceActionDTO
+): Promise<BalanceActionResponseDTO> {
+  const response = await fetch("/api/account/action", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  const json = await response.json();
+
   return {
-    dollars: 0,
-    cents: 0,
+    success: json.success,
+    error: json.error,
+    balance: json.balance,
   };
 }
 

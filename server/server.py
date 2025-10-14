@@ -15,7 +15,7 @@ def prompt_for_account_action():
         return (jsonify({"error": f"Error processing request: {str(e)}"}), 500)
 
 
-@app.route("/account/action")
+@app.route("/account/action", methods=["POST"])
 def directly_called_account_action():
     try:
         return service.directly_called_account_action(request)
