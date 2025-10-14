@@ -10,8 +10,15 @@ class Amount:
         self.cents = cents
 
     @staticmethod
-    def fromJsonDict(dict: dict[str, Any]):
+    def empty() -> Amount:
+        return Amount(0, 0)
+
+    @staticmethod
+    def fromJson(dict: dict[str, Any]) -> Amount:
         return Amount(dict["dollars"], dict["cents"])
+
+    def toJson(self) -> dict[str, Any]:
+        return {"dollars": self.dollars, "cents": self.cents}
 
 
 class BalanceAction:
@@ -20,7 +27,32 @@ class BalanceAction:
 
 
 class BalanceActionError:
-    insufficientFunds = "INSUFFICIENT_FUNDS"
+    _error = ""
+
+    def __init__(self, error):
+        self._error = error
+
+    def toJson(self) -> str:
+        return self._error
+
+    def hasError(self) -> bool:
+        return self._error != "NO_ERROR"
+
+    @staticmethod
+    def noError() -> BalanceActionError:
+        return BalanceActionError("NO_ERROR")
+
+    @staticmethod
+    def insufficientFunds() -> BalanceActionError:
+        return BalanceActionError("INSUFFICIENT_FUNDS")
+
+    @staticmethod
+    def negativeDepositAmount() -> BalanceActionError:
+        return BalanceActionError("NEGATIVE_DEPOSIT_AMOUNT")
+
+    @staticmethod
+    def negativeBalanceAmount() -> BalanceActionError:
+        return BalanceActionError("NEGATIVE_BALANCE")
 
 
 class BalanceActionDTO:
@@ -34,11 +66,11 @@ class BalanceActionDTO:
         self.amount = amount
 
     @staticmethod
-    def fromJsonDict(dict: dict[str, Any]):
+    def fromJson(dict: dict[str, Any]) -> BalanceActionDTO:
         return BalanceActionDTO(
             dict["action"],
-            Amount.fromJsonDict(dict["balance"]),
-            Amount.fromJsonDict(dict["amount"]),
+            Amount.fromJson(dict["balance"]),
+            Amount.fromJson(dict["amount"]),
         )
 
 
@@ -52,8 +84,12 @@ class BalanceActionResponseDTO:
         self.error = error
         self.balance = balance
 
-    def toJsonDict(self) -> dict[str, Any]:
-        return {"success": self.success, "error": self.error, "balance": self.balance}
+    def toJson(self) -> dict[str, Any]:
+        return {
+            "success": self.success,
+            "error": self.error.toJson(),
+            "balance": self.balance.toJson(),
+        }
 
 
 class BalancePromptActionDTO:
@@ -61,7 +97,7 @@ class BalancePromptActionDTO:
     balance: Amount
 
     @staticmethod
-    def fromJsonDict(dict: dict[str, Any]):
+    def fromJson(dict: dict[str, Any]) -> BalancePromptActionDTO:
         pass
 
 
@@ -75,7 +111,7 @@ class BalancePromptActionResponseDTO:
         self.success = success
         self.balance = balance
 
-    def toJsonDict(self) -> dict[str, Any]:
+    def toJson(self) -> dict[str, Any]:
         return {
             "response": self.response,
             "success": self.success,
