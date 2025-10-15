@@ -379,8 +379,7 @@ function ChatbotEntryField({
         </Box>
         <Typography sx={{ marginTop: 2 }}>
           This chatbot uses a simple tool calling implementation to allow users
-          to deposit and withdraw money. Try the following to see some
-          additional value it adds:
+          to deposit and withdraw money. Try the following to see it in action:
         </Typography>
         <ul>
           <li>
