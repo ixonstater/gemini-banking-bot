@@ -70,13 +70,15 @@ Second a function to withdraw money from a users bank account named {FUNCTION_NA
 Use the given input to determine which of these functions, if any, you should call.
 If you decide to call a function respond with the exact name of the function followed by a space and its arguments.
 Function arguments should be printed in a comma-separated ordered list, do not surround the argument list with parenthesis or brackets.
-If no function should be called, which should be the case unless very clearly indicated, respond with whatever output seems appropriate to best aid the user based on the instruction context given in this prompt and preface your response with {FUNCTION_NAME_NO_FUNCTION_CALLED}.
+If no function should be called, which should be the case unless very clearly indicated, respond with whatever output seems appropriate to help the user accomplish their banking related task and preface your response with {FUNCTION_NAME_NO_FUNCTION_CALLED}.
 If the user seems frustrated or angry respond with {FUNCTION_NAME_ESCALATE}.
 If the user seems confused or to be asking for guidance respond with {FUNCTION_NAME_HELP}.
 The given input is: "*user_input*"
 """
 
-HELP_RESPONSE = """Hmm, it seems like we couldn't understand what you wanted to do.  You can withdraw money or deposit money here.  If you ask to withdraw or deposit money, please include the exact amount you wish to withdraw or deposit in your request."""
+COULD_NOT_UNDERSTAND_RESPONSE = """Hmm, it seems like we couldn't understand what you wanted to do.  You can withdraw money or deposit money here.  If you ask to withdraw or deposit money, please include the exact amount you wish to withdraw or deposit in your request."""
+
+HELP_REQUESTED_RESPONSE = """You can withdraw money or deposit money here.  If you ask to withdraw or deposit money, please include the exact amount you wish to withdraw or deposit in your request."""
 
 MISSING_INFORMATION_RESPONSE = """Seems like we didn't get enough information to complete your request.  Please make sure to include the dollar and cent amounts you wish to withdraw or deposit from / to your account."""
 
@@ -111,12 +113,22 @@ def prompted_account_action(request: Request) -> Response:
 
     parsed = _parse_initial_response(initial_response)
 
-    if len(parsed) < 1 or FUNCTION_NAME_HELP in parsed[0]:
+    if len(parsed) < 1:
         return jsonify(
             BalancePromptActionResponseDTO(
                 False,
                 False,
-                HELP_RESPONSE,
+                COULD_NOT_UNDERSTAND_RESPONSE,
+                Amount.empty(),
+                BalanceActionError.noError(),
+            ).toJson()
+        )
+    elif FUNCTION_NAME_HELP in parsed[0]:
+        return jsonify(
+            BalancePromptActionResponseDTO(
+                False,
+                False,
+                HELP_REQUESTED_RESPONSE,
                 Amount.empty(),
                 BalanceActionError.noError(),
             ).toJson()
@@ -149,7 +161,7 @@ def prompted_account_action(request: Request) -> Response:
             BalancePromptActionResponseDTO(
                 False,
                 False,
-                HELP_RESPONSE,
+                COULD_NOT_UNDERSTAND_RESPONSE,
                 Amount.empty(),
                 BalanceActionError.noError(),
             ).toJson()

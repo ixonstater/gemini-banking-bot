@@ -63,7 +63,7 @@ export default function BankCard() {
             <Typography sx={{ color: "text.secondary", mb: 1.5 }}>
               Bank Account Balance
             </Typography>
-            <Typography variant="body2">{formatForDollars(balance)}</Typography>
+            <Typography variant="h6">{formatForDollars(balance)}</Typography>
           </CardContent>
           <CardActions>
             <Button
@@ -347,7 +347,7 @@ function ChatbotEntryField({
             marginTop: 2,
             border: "1px solid rgba(0, 0, 0, 0.12)",
             borderRadius: "4px",
-            minHeight: 250,
+            minHeight: 100,
             padding: 2,
             display: "flex",
           }}
@@ -368,11 +368,17 @@ function ChatbotEntryField({
           )}
         </Box>
         <Typography sx={{ marginTop: 2 }}>
-          This chatbot uses simple prompt wrapping to work with the deposit and
-          withdrawal server endpoints. Try the following to see some additional
-          value it adds:
+          This chatbot uses a simple tool calling implementation to allow users
+          to deposit and withdraw money. Try the following to see some
+          additional value it adds:
         </Typography>
         <ul>
+          <li>
+            <Typography>Ask to withdraw money.</Typography>
+          </li>
+          <li>
+            <Typography>Ask to deposit money.</Typography>
+          </li>
           <li>
             <Typography>Submit a prompt as a frustrated user.</Typography>
           </li>
