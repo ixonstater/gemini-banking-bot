@@ -29,6 +29,7 @@ import {
   type Amount,
   type BalanceAction,
   type BalanceActionError,
+  type BalancePromptActionResponseDTO,
 } from "../api/GeminiBanking";
 
 type StateFunction<T> = Dispatch<SetStateAction<T>>;
@@ -300,10 +301,19 @@ function ChatbotEntryField({
             <IconButton
               onClick={async () => {
                 setLoading(true);
-                const response = await callForNewBalanceViaPrompt({
-                  prompt,
-                  balance,
-                });
+
+                let response: BalancePromptActionResponseDTO;
+                try {
+                  response = await callForNewBalanceViaPrompt({
+                    prompt,
+                    balance,
+                  });
+                } catch (e) {
+                  setLoading(false);
+                  console.error(e);
+                  return;
+                }
+
                 setLoading(false);
 
                 setChatResponse(response.response);

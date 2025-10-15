@@ -16,7 +16,7 @@ type BalancePromptActionDTO = {
   balance: Amount;
 };
 
-type BalancePromptActionResponseDTO = {
+export type BalancePromptActionResponseDTO = {
   balance: Amount;
   balanceActionError: BalanceActionError;
   escalateUser: boolean;
